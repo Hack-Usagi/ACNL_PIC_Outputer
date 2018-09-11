@@ -1,0 +1,96 @@
+title "ACNL_PIC_Outputer"
+screen 0, 300, 160
+
+#define EM_SCROLL 0x00B5
+#define SB_BOTTOM 7
+#define EM_REPLACESEL $C2
+
+//ボタンオブジェクト
+objsize 150, 30
+
+	button "select save data file",*select_save
+	button "start",*convert
+
+//=============================================
+sdim buf
+mesbox buf, 300, 100, 5, 0
+hMesBox = objinfo(stat, 2)
+
+	hInput = objinfo(stat, 2)
+	sendmsg hInput, $CF, 1
+
+sendmsg hMesBox, EM_SCROLL, SB_BOTTOM, 0
+*restart
+stop
+
+//=============================================
+
+//セーブファイル選択ウィンドウを表示
+*select_save
+	dialog "dat" , 16 , "save data"
+	if ( stat = 0 ){
+		goto *restart
+	}
+    save_data_pass=refstr
+
+//ファイルが正しいかチェック
+　　exist save_data_pass
+　　if( strsize = -1 ){
+　　　　dialog "セーブデータのパスが無効です", 1 , "エラー"
+		goto *reset_save_pass
+　　}
+	sendmsg hMesbox, EM_REPLACESEL, , "セーブデータが選択されました\n　"+save_data_pass+"\n"
+	save=1
+stop
+
+//セーブデータのパスをリセット
+	*reset_save_pass
+		sendmsg hMesbox, EM_REPLACESEL, , "セーブデータが選択できませんでした\n　"+save_data_pass+"\n"
+		save_data_pass=0
+		save=0
+	goto *restart
+
+//ここから書き換え処理
+	//ファイルが選択されているかチェック
+	*convert
+		if (save = 0) {
+			dialog "セーブデータが選択されていません", 1, "エラー"
+			goto *restart
+		}
+
+	//切り出し
+		sendmsg hMesbox, EM_REPLACESEL, , "\n処理スタート====================\n"
+
+		//セーブデータのバイナリデータを代入(save_data)
+		sendmsg hMesbox, EM_REPLACESEL, , "セーブデータを読み込んでいます\n"
+		exist save_data_pass
+		save_size = strsize
+				sdim save_data,save_size
+		bload save_data_pass , save_data,save_size,0
+		sendmsg hMesbox, EM_REPLACESEL, , "　OK\n"
+
+	//画像のバックアップを取る
+		//画像文字列をセーブデータから切り出す
+		sendmsg hMesbox, EM_REPLACESEL, , "画像をバックアップ出力しています\n"
+		sdim save_pic,5000
+			memcpy save_pic,save_data,5000,0,22488
+			bsave "backup\\backup_pic.jpg",save_pic
+		sendmsg hMesbox, EM_REPLACESEL, , "　OK\n"
+
+
+		//画像保存処理
+		dialog "jpg" , 17 , "jpg data"
+		    if ( stat = 0 ){
+			    sendmsg hMesbox, EM_REPLACESEL, , "保存場所が選択されませんでした\n"
+	    goto *restart
+		}
+
+		sendmsg hMesbox, EM_REPLACESEL, , "画像を保存しています\n"
+		pic_save_pass=refstr
+
+			bsave pic_save_pass,save_pic
+			bsave "backup\\backup_pic.jpg",save_pic
+		sendmsg hMesbox, EM_REPLACESEL, , "処理完了:画像が出力されました\n　"+pic_save_pass
+
+	goto *restart
+stop

@@ -13,5 +13,4 @@
 <img src="https://user-images.githubusercontent.com/40888604/45362988-3aae4980-b611-11e8-85a1-73a944ed4319.jpg"> 
 <h2>SpecialThanks</h2>
 <p>・Nintendo
-<br>・<a href="https://github.com/marcrobledo">Marc Robledo
 <br>・私を取り囲むすべての人達とDeveloperの方々</p>
